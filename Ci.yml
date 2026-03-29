@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─────────────────────────────────────────────
+  # 1. Python linting
+  # ─────────────────────────────────────────────
+  lint-python:
+    name: Python — ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff
+        run: ruff check airflow/dags/ --select E,W,F --ignore E501
+
+  # ─────────────────────────────────────────────
+  # 2. SQL linting
+  # ─────────────────────────────────────────────
+  lint-sql:
+    name: SQL — sqlfluff (dbt dialect)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install sqlfluff
+        run: pip install sqlfluff sqlfluff-templater-dbt dbt-postgres
+
+      - name: Run sqlfluff
+        run: |
+          sqlfluff lint dbt/models/ \
+            --dialect postgres \
+            --templater dbt \
+            --exclude-rules L034,L042
+
+  # ─────────────────────────────────────────────
+  # 3. dbt compile (graph validation — no DB needed)
+  # ─────────────────────────────────────────────
+  dbt-compile:
+    name: dbt — compile models
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dbt
+        run: pip install dbt-postgres==1.8.1
+
+      - name: Write CI profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          odoo_etl:
+            target: dw_postgres
+            outputs:
+              dw_postgres:
+                type: postgres
+                host: localhost
+                port: 5432
+                dbname: dw
+                user: airflow
+                password: airflow
+                schema: public
+                threads: 1
+          EOF
+
+      - name: dbt compile
+        working-directory: dbt
+        run: dbt compile --profiles-dir ~/.dbt
+
+  # ─────────────────────────────────────────────
+  # 4. Integration tests (Postgres service container)
+  # ─────────────────────────────────────────────
+  integration-tests:
+    name: Integration tests — PostgreSQL
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: dw
+          POSTGRES_USER: airflow
+          POSTGRES_PASSWORD: airflow
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run DW init script
+        run: |
+          PGPASSWORD=airflow psql -h localhost -U airflow -d dw -f init/init-dw.sql
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          pip install dbt-postgres==1.8.1 psycopg2-binary
+
+      - name: Write CI profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          odoo_etl:
+            target: dw_postgres
+            outputs:
+              dw_postgres:
+                type: postgres
+                host: localhost
+                port: 5432
+                dbname: dw
+                user: airflow
+                password: airflow
+                schema: public
+                threads: 1
+          EOF
+
+      - name: dbt deps
+        working-directory: dbt
+        run: dbt deps --profiles-dir ~/.dbt
+
+      - name: Verify schemas created
+        run: |
+          PGPASSWORD=airflow psql -h localhost -U airflow -d dw -c \
+            "SELECT schema_name FROM information_schema.schemata WHERE schema_name IN ('raw','staging','dimensions','facts','metadata') ORDER BY 1;"

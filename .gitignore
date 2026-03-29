@@ -1,0 +1,123 @@
+############################################################
+# 🔥 SECRETS & CREDENTIALS — NEVER COMMIT THESE
+############################################################
+.env
+.env.*
+*.env
+!.env.example
+
+secrets/
+*.key
+*.pem
+*.crt
+*.token
+
+# Airflow connection scripts containing credentials
+airflow/scripts/setup_airflow_connections.py
+airflow/scripts/*connections*
+airflow/scripts/*secrets*
+
+############################################################
+# 🐍 PYTHON
+############################################################
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.Python
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+############################################################
+# 🌀 DBT
+############################################################
+dbt/target/
+dbt/logs/
+dbt/.user.yml
+dbt/dbt_packages/
+dbt_packages/
+dbt/profiles.yml        # contains real credentials
+
+############################################################
+# ✈️ AIRFLOW
+############################################################
+airflow/logs/
+airflow/*.db
+airflow/airflow.db
+airflow/unittests.cfg
+airflow/tmp/
+airflow/plugins/__pycache__/
+airflow/webserver_config.py   # may contain secret_key
+
+############################################################
+# 🐳 DOCKER / RUNTIME
+############################################################
+*.pid
+*.log
+**/*.log
+tmp/
+data/
+volumes/
+postgres_data/
+**/logs/
+
+############################################################
+# 📊 SUPERSET
+############################################################
+superset_home/
+superset/logs/
+superset/db/
+superset/.superset/
+superset/*.db
+
+############################################################
+# 💻 OS / EDITOR NOISE
+############################################################
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+############################################################
+# 📸 POWER BI / SCREENSHOTS (keep only curated ones)
+############################################################
+# Uncomment if you want to exclude all screenshots:
+# docs/screenshots/
+# *.pbix        # Power BI files can contain data
+
+############################################################
+# 🗂️ MISC
+############################################################
+*.bak
+*.tmp
+*.orig
+node_modules/
+.ipynb_checkpoints/
+Jupyter Notebook Checkpoints/
