@@ -6,7 +6,7 @@
 
 ## 1. Dashboard — Direction Commerciale
 
-![Direction Commerciale — Analyse des Opportunités et du CA](docs/screenshots/direction_commerciale.jpg)
+![Direction Commerciale — Analyse des Opportunités et du CA](docs/screenshots/Dashboard_Vendeur1.png)
 
 ### Objectif Business
 
