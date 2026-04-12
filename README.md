@@ -512,6 +512,21 @@ Key variables:
 | `POSTGRES_PASSWORD` | Airflow metadata + DW password |
 
 ---
+## 📊 Power BI Dashboards
+
+Three production dashboards consuming the star schema directly via DirectQuery.
+
+| Dashboard | Pages | Key Metrics |
+|-----------|-------|-------------|
+| [Direction Commerciale](docs/powerbi_dashboards.md#1-dashboard--direction-commerciale) | Opportunités · Signé · Annulé · Portefeuille | CA RBE, Taux de gain/perte, MoM% |
+| [Cockpit Vendeur](docs/powerbi_dashboards.md#2-dashboard--cockpit-vendeur) | Récapitulatif · CA Mensuel | Objectif ajusté, Ranking, N vs N-1 |
+| [Analyse RH](docs/powerbi_dashboards.md#3-dashboard--analyse-rh) | Employés · Congés · Salaires · Récap | Absentéisme, Rotation, Masse salariale |
+
+→ [Full DAX documentation and screenshots](docs/powerbi_dashboards.md)
+
+### Preview
+
+
 
 ## License
 
